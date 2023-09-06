@@ -34,4 +34,4 @@ def cc2vec_preprocess(commit_info, params):
         "removed_code": pad_removed_code.tolist()
     }
     
-    return (code, dict_msg, dict_code)
+    return code
