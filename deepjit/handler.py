@@ -1,6 +1,16 @@
-import torch, os
+import torch, os, pickle, json, logging
 from model import DeepJIT
-from ts.utils.util import PredictionException
+
+# Configure the logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Configure the file handler
+file_handler = logging.FileHandler('deepjit.log')
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 class DeepJITHandler:
     """
@@ -45,8 +55,8 @@ class DeepJITHandler:
         params["class_num"] = 1
 
         # Initialize model
-        self.model = DeepJIT(params)
-        self.model = torch.jit.load(model_pt_path)
+        self.model = DeepJIT(params).to(device=self.device)
+        self.model.load_state_dict(torch.load(model_pt_path, map_location=self.device))
 
         self.initialized = True
 
@@ -71,7 +81,11 @@ class DeepJITHandler:
         :return: list of inference output in NDArray
         """
         # Do some inference call to engine here and return output
-        model_output = self.model.forward(model_input)
+        # Extract data from DataLoader
+        code = torch.tensor(model_input["input"]["code"], device=self.device)
+        message = torch.tensor(model_input["input"]["message"], device=self.device)
+
+        model_output = self.model.forward(message, code)
         return model_output
 
     def postprocess(self, inference_output):
@@ -81,8 +95,8 @@ class DeepJITHandler:
         :return: list of predict results
         """
         # Take output from network and post-process to desired format
-        postprocess_output = inference_output
-        return postprocess_output
+        postprocess_output = inference_output.item()
+        return [postprocess_output]
 
     def handle(self, data, context):
         """
