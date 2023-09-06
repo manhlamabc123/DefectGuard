@@ -36,8 +36,8 @@ app = Flask(__name__)
 async def send_request(session, model, send_message, api_url):
     async with session.post(api_url, json=send_message) as response:
         if response.status == 200:
-            model_response = await response.json()
-            return model, model_response['output']
+            model_response = await response.json(content_type=None)
+            return model, model_response
         else:
             return model, -1
         

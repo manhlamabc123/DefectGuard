@@ -24,4 +24,4 @@ def deepjit_preprocess(commit_info, params):
         "message": pad_msg.tolist()
     }
     
-    return (code, dict_msg, dict_code)
+    return code
