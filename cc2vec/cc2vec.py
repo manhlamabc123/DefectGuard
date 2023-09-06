@@ -47,6 +47,7 @@ def template():
         feature = cc2vec(added_code, removed_code, state_hunk, state_sent, state_word, request_data['device'])
 
     params["embedding_feature"] = feature.shape[1]
+    print(feature.size())
 
     deepjit = DeepJITExtended(params).to(device=request_data["device"])
     deepjit.load_state_dict(torch.load(params["pretrained_deepjit"], map_location=request_data["device"]))
