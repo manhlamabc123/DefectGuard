@@ -17,7 +17,7 @@ preprocess_data = {
 }
 
 api_lists = {
-    'deepjit': "http://localhost:5001/api/deepjit",
+    'deepjit': "http://localhost:8080/predictions/deepjit",
     'cc2vec': "http://localhost:5002/api/cc2vec",
     'lapredict': "http://localhost:5003/api/lapredict",
     'simcom': "http://localhost:5004/api/simcom",
