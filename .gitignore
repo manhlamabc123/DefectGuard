@@ -9,7 +9,7 @@ save
 github_access_token.txt
 deepjit_torchserve
 .vscode
-defectguard
+defectguard_env
 torchserve
 deepjit_extended.pt
 cc2vec.pt
