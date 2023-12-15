@@ -12,7 +12,7 @@ from argparse import Namespace
 from .utils.logger import ic
 from datetime import datetime
 
-__version__ = "0.1.30"
+__version__ = "0.1.31"
 
 
 def read_args():
