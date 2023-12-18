@@ -14,29 +14,45 @@ class DeepJIT(BaseWraper):
         self.device = device
         self.message_dictionary = None
         self.code_dictionary = None
-        self.parameters = None
+        self.hyperparameters = None
         download_folder(self.model_name, self.dataset, self.project)
 
     def __call__(self, message, code):
         return self.model(message, code)
     
-    def initialize(self):
+    def get_parameters(self):
+        return self.model.parameters()
+    
+    def set_device(self, device):
+        self.device = device
+    
+    def initialize(self, dictionary=None, hyperparameters=None, from_pretrain=True, state_dict=None):
         # Load dictionary
-        dictionary = pickle.load(open(f"{SRC_PATH}/models/metadata/{self.model_name}/{self.dataset}_dictionary_{self.project}", 'rb'))
+        if dictionary:
+            dictionary = pickle.load(open(dictionary, 'rb'))
+        else:
+            dictionary = pickle.load(open(f"{SRC_PATH}/models/metadata/{self.model_name}/{self.dataset}_dictionary_{self.project}", 'rb'))
         self.message_dictionary, self.code_dictionary = dictionary
 
         # Load parameters
-        with open(f"{SRC_PATH}/models/metadata/{self.model_name}/hyperparameters", 'r') as file:
-            self.parameters = json.load(file)
+        if hyperparameters:
+            with open(hyperparameters, 'r') as file:
+                self.hyperparameters = json.load(file)
+        else:
+            with open(f"{SRC_PATH}/models/metadata/{self.model_name}/hyperparameters", 'r') as file:
+                self.hyperparameters = json.load(file)
 
         # Set up param
-        self.parameters["filter_sizes"] = [int(k) for k in self.parameters["filter_sizes"].split(',')]
-        self.parameters["vocab_msg"], self.parameters["vocab_code"] = len(self.message_dictionary), len(self.code_dictionary)
-        self.parameters["class_num"] = 1
+        self.hyperparameters["filter_sizes"] = [int(k) for k in self.hyperparameters["filter_sizes"].split(',')]
+        self.hyperparameters["vocab_msg"], self.hyperparameters["vocab_code"] = len(self.message_dictionary), len(self.code_dictionary)
+        self.hyperparameters["class_num"] = 1
 
         # Create model and Load pretrain
-        self.model = DeepJITModel(self.parameters).to(device=self.device)
-        self.model.load_state_dict(torch.load(f"{SRC_PATH}/models/metadata/{self.model_name}/{self.dataset}_{self.project}", map_location=self.device))
+        self.model = DeepJITModel(self.hyperparameters).to(device=self.device)
+        if from_pretrain and dictionary is None:
+            self.model.load_state_dict(torch.load(f"{SRC_PATH}/models/metadata/{self.model_name}/{self.dataset}_{self.project}", map_location=self.device))
+        elif state_dict:
+            self.model.load_state_dict(torch.load(state_dict, map_location=self.device))
 
         # Set initialized to True
         self.initialized = True
@@ -70,8 +86,8 @@ class DeepJIT(BaseWraper):
                 commit_messages.append('')
                 codes.append([])
 
-        pad_msg = padding_data(data=commit_messages, dictionary=self.message_dictionary, params=self.parameters, type='msg')        
-        pad_code = padding_data(data=codes, dictionary=self.code_dictionary, params=self.parameters, type='code')
+        pad_msg = padding_data(data=commit_messages, dictionary=self.message_dictionary, params=self.hyperparameters, type='msg')        
+        pad_code = padding_data(data=codes, dictionary=self.code_dictionary, params=self.hyperparameters, type='code')
 
         # Using Pytorch Dataset and DataLoader
         code = {

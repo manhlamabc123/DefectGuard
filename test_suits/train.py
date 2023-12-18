@@ -39,16 +39,17 @@ dict_msg, dict_code = dictionary
 
 # ---------------------- DefectGuard -------------------------------
 model = DeepJIT(device='cuda')
-model.initialize()
+model.initialize(dictionary='/home/manh/Documents/DefectGuard/Data/bootstrap_part_5_dict.pkl', hyperparameters="hyperparameters.json")
+print(model.hyperparameters)
 # ------------------------------------------------------------------
 
-pad_msg = padding_data(data=messages, dictionary=dict_msg, params=model.parameters, type='msg')        
-pad_code = padding_data(data=commits, dictionary=dict_code, params=model.parameters, type='code')
+pad_msg = padding_data(data=messages, dictionary=dict_msg, params=model.hyperparameters, type='msg')        
+pad_code = padding_data(data=commits, dictionary=dict_code, params=model.hyperparameters, type='code')
 
 code_dataset = CustomDataset(ids, pad_code, pad_msg, labels)
-code_dataloader = DataLoader(code_dataset, batch_size=model.parameters['batch_size'])
+code_dataloader = DataLoader(code_dataset, batch_size=model.hyperparameters['batch_size'])
 
-optimizer = torch.optim.Adam(model.model.parameters(), lr=5e-5)
+optimizer = torch.optim.Adam(model.get_parameters(), lr=5e-5)
 criterion = nn.BCELoss()
 
 for epoch in range(1, 10 + 1):
